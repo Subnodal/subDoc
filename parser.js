@@ -83,7 +83,6 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
     var foundPatterns = [];
     var tokenIndex = 0;
     var patternApplications = [];
-    // var foundPatternApplication = null;
     var patternApplicationNamespaceStack = [];
 
     tokens.push(null);
@@ -116,7 +115,7 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
 
         for (var i = 0; i < patternApplications.length; i++) {
             // Check if pattern application has been successful
-            if (patternApplications[i].shapeIndex == patternApplications[i].pattern.shape.length) {
+            if (patternApplications[i].shapeIndex == patternApplications[i].highestShapeIndex) {
                 patternApplicationNamespaceStack.push(patternApplications[i]);
 
                 patternApplications = []; // Cancel pending pattern applications since a successful one has been found

@@ -7,7 +7,11 @@
     Licenced by the Subnodal Open-Source Licence, which can be found at LICENCE.md.
 */
 
-exports.Identifier = class {};
+exports.Identifier = class {
+    constructor(value = null) {
+        this.value = value;
+    }
+};
 
 exports.Token = class {
     constructor(token) {
@@ -16,8 +20,9 @@ exports.Token = class {
 };
 
 exports.TokensUntil = class {
-    constructor(token) {
+    constructor(token, value = []) {
         this.token = token;
+        this.value = value;
     }
 };
 
@@ -33,6 +38,8 @@ exports.Pattern = class {
         }
 
         if (this.shape[index] instanceof exports.Identifier) {
+            this.shape[index].value = token;
+
             return true;
         }
 
@@ -40,7 +47,11 @@ exports.Pattern = class {
             return true;
         }
 
-        if (this.shape[index] instanceof exports.TokensUntil) {
+        if (this.shape[index + 1] instanceof exports.TokensUntil) {
+            if (this.shape[index + 1].token != token) {
+                this.shape[index + 1].value.push(token);
+            }
+
             return true;
         }
 
@@ -48,7 +59,7 @@ exports.Pattern = class {
     }
 
     mustHoldBackShapeIndex(token, index) {
-        return this.shape[index + 1] instanceof exports.TokensUntil && this.shape[index].token != token;
+        return this.shape[index] instanceof exports.TokensUntil && this.shape[index + 1].token != token;
     }
 };
 
@@ -229,6 +240,18 @@ exports.PatternApplication = class {
         this.namespacedApplications = namespacedApplications;
 
         this.shapeIndex = 0;
+    }
+
+    get highestShapeIndex() {
+        var shapeIndexTotal = 0;
+
+        for (var i = 0; i < this.pattern.shape.length; i++) {
+            if (!(this.pattern.shape[i] instanceof exports.TokensUntil)) {
+                shapeIndexTotal++;
+            }
+        }
+
+        return shapeIndexTotal;
     }
 };
 
