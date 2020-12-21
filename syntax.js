@@ -56,7 +56,8 @@ exports.BlockCommentPattern = class extends exports.Pattern {
     constructor() {
         // /*
         super(
-            [new exports.Token("/*")]
+            [new exports.Token("/*")],
+            new exports.Token("*/")
         );
     }
 };
@@ -232,6 +233,7 @@ exports.PatternApplication = class {
 };
 
 exports.patterns = [
+    new exports.BlockCommentPattern(),
     new exports.FunctionDeclarationPattern(),
     new exports.FunctionExpressionPattern(),
     new exports.FunctionExportPattern(),
