@@ -52,6 +52,15 @@ exports.Pattern = class {
     }
 };
 
+exports.BlockCommentPattern = class extends exports.Pattern {
+    constructor() {
+        // /*
+        super(
+            [new exports.Token("/*")]
+        );
+    }
+};
+
 exports.FunctionDeclarationPattern = class extends exports.Pattern {
     constructor() {
         // function ? (??) {

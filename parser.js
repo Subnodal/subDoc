@@ -57,9 +57,10 @@ exports.ClassReference = class extends exports.FunctionReference {
     }
 };
 
-function getTokens(input) {
-    var tokens = input.split(/\b|\s/g);
+exports.tokenise = function(input) {
+    var tokens = input.split(/\b|\s|(?=(?!\())(?!(?!\)))|(?=(?!{))(?!(?!}))/g); // Split at identifier boundaries, whitespace and brackets
 
+    // Remove whitespace tokens and trim the rest of the tokens
     tokens = tokens
         .filter((item) => !/^\s$/.test(item))
         .map((item) => item.trim())
@@ -144,7 +145,7 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
 };
 
 exports.parse = function(input) {
-    var tokens = getTokens(input);
+    var tokens = exports.tokenise(input);
 
     return exports.getPatternApplicationsFromTokens(tokens);
 };

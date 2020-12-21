@@ -46,4 +46,4 @@ config.data.indir = options.indir || config.data.indir || ".";
 config.data.outdir = options.outdir || config.data.outdir || path.join(config.data.indir, "docs");
 
 console.log(tree.walk(config.data.indir));
-console.log(parser.parse("function integerTest(a, b, c) { constructor() { test() { e } } } function integerTest(a, b, c) { } function integerTest(a, b, c) { }"));
+console.log(parser.parse("function integerTest(a, b, c) {constructor() {test() {e}}} function integerTest(a, b, c) {} function integerTest(a, b, c) {}"));
