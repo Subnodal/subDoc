@@ -47,9 +47,9 @@ exports.Pattern = class {
             return true;
         }
 
-        if (this.shape[index + 1] instanceof exports.TokensUntil) {
-            if (this.shape[index + 1].token != token) {
-                this.shape[index + 1].value.push(token);
+        if (this.shape[index] instanceof exports.TokensUntil) {
+            if (this.shape[index].token != token) {
+                this.shape[index].value.push(token);
             }
 
             return true;
