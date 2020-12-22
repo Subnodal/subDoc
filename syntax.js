@@ -30,15 +30,23 @@ exports.Pattern = class {
     constructor(shape = [], end = new exports.Token("")) {
         this.shape = shape;
         this.end = end;
+
+        this.hasFinishedFillingValues = false;
     }
 
     fulfilsAt(token, index) {
+        if (index + 1 == this.shape.length) {
+            this.hasFinishedFillingValues = true; // Prevent duplicate values from being recorded
+        }
+
         if (index >= this.shape.length) {
             return false;
         }
 
         if (this.shape[index] instanceof exports.Identifier) {
-            this.shape[index].value = token;
+            if (!this.hasFinishedFillingValues) {
+                this.shape[index].value = token;
+            }
 
             return true;
         }
@@ -48,7 +56,7 @@ exports.Pattern = class {
         }
 
         if (this.shape[index] instanceof exports.TokensUntil) {
-            if (this.shape[index].token != token) {
+            if (!this.hasFinishedFillingValues && this.shape[index].token != token) {
                 this.shape[index].value.push(token);
             }
 
@@ -59,7 +67,7 @@ exports.Pattern = class {
     }
 
     mustHoldBackShapeIndex(token, index) {
-        return this.shape[index] instanceof exports.TokensUntil && this.shape[index + 1].token != token;
+        return this.shape[index] instanceof exports.TokensUntil && (this.shape[index].token != token);
     }
 };
 
@@ -70,6 +78,16 @@ exports.BlockCommentPattern = class extends exports.Pattern {
             [new exports.Token("/*")],
             new exports.Token("*/")
         );
+    }
+};
+
+exports.NamespacePattern = class extends exports.Pattern {
+    constructor() {
+        // namespace("??", function(??) {
+            super(
+                [new exports.Token("namespace"), new exports.Token("("), new exports.Token("\""), new exports.TokensUntil("\""), new exports.Token(","), new exports.Token("function"), new exports.Token("("), new exports.TokensUntil(")"), new exports.Token("{")],
+                new exports.Token("}")
+            );
     }
 };
 
@@ -197,7 +215,7 @@ exports.ClassMethodPattern = class extends exports.Pattern {
     constructor() {
         // ? {
         super(
-            [new exports.Identifier(), new exports.Token("{")],
+            [new exports.Identifier(), new exports.Token("("), new exports.TokensUntil(")"), new exports.Token("{")],
             new exports.Token("}")
         );
     }
@@ -244,9 +262,8 @@ exports.BlockScope = class extends exports.Pattern {
 };
 
 exports.PatternApplication = class {
-    constructor(pattern, valueTokens = [], namespacedApplications = []) {
+    constructor(pattern, namespacedApplications = []) {
         this.pattern = pattern;
-        this.valueTokens = valueTokens;
         this.namespacedApplications = namespacedApplications;
 
         this.shapeIndex = 0;
@@ -267,6 +284,7 @@ exports.PatternApplication = class {
 
 exports.patterns = [
     new exports.BlockCommentPattern(),
+    new exports.NamespacePattern(),
     new exports.FunctionDeclarationPattern(),
     new exports.FunctionExpressionPattern(),
     new exports.FunctionExportPattern(),

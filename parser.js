@@ -58,7 +58,7 @@ exports.ClassReference = class extends exports.FunctionReference {
 };
 
 exports.tokenise = function(input) {
-    var tokens = input.split(/\b|\s|(?=(?!\())(?!(?!\)))|(?=(?!{))(?!(?!}))/g); // Split at identifier boundaries, whitespace and brackets
+    var tokens = input.split(/\b|\s|(?=(?!\())(?!(?!\)))|(?=(?!{))(?!(?!}))|(?=["'`:;,])/g); // Split at identifier boundaries, whitespace, brackets, quotes and delimiters
 
     // Remove whitespace tokens and trim the rest of the tokens
     tokens = tokens
@@ -79,6 +79,20 @@ function isPatternInUse(pattern, patternApplications) {
     return false;
 }
 
+function shouldCancelAcceptablePatternApplication(patternApplications, patternApplicationIndex, nextToken) {
+    for (var i = 0; i < patternApplicationIndex; i++) {
+        if (patternApplications[i].pattern.fulfilsAt(nextToken, patternApplications[i].shapeIndex)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function shouldAcceptPatternApplication(patternApplications, patternApplicationIndex) {
+    return patternApplications[patternApplicationIndex].shapeIndex == patternApplications[patternApplicationIndex].pattern.shape.length;
+}
+
 exports.getPatternApplicationsFromTokens = function(tokens) {
     var foundPatterns = [];
     var tokenIndex = 0;
@@ -87,8 +101,11 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
 
     tokens.push(null);
 
-    while (tokenIndex < tokens.length) {
-        if (patternApplicationNamespaceStack.length > 0 && patternApplicationNamespaceStack[patternApplicationNamespaceStack.length - 1].pattern.end.token == tokens[tokenIndex]) {
+    while (tokenIndex <= tokens.length) {
+        if (patternApplicationNamespaceStack.length > 0 && (
+            patternApplicationNamespaceStack[patternApplicationNamespaceStack.length - 1].pattern.end.token == tokens[tokenIndex] ||
+            tokens[tokenIndex] == null
+        )) {
             var poppedPatternApplication = patternApplicationNamespaceStack.pop();
 
             if (patternApplicationNamespaceStack.length == 0) {
@@ -115,11 +132,20 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
 
         for (var i = 0; i < patternApplications.length; i++) {
             // Check if pattern application has been successful
-            if (patternApplications[i].shapeIndex == patternApplications[i].highestShapeIndex) {
+            if (shouldAcceptPatternApplication(patternApplications, i)) {
+                // Check if there are competing pattern applications that are more likely to be successful
+                // If so, cancel this pattern application
+                if (shouldCancelAcceptablePatternApplication(patternApplications, i, tokens[tokenIndex + 1])) {
+                    continue;
+                }
+
                 patternApplicationNamespaceStack.push(patternApplications[i]);
 
                 patternApplications = []; // Cancel pending pattern applications since a successful one has been found
-                tokenIndex--;
+
+                if (patternApplicationNamespaceStack.length == 1) {
+                    tokenIndex--;
+                }
 
                 continue;
             }
