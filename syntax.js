@@ -163,6 +163,16 @@ exports.ClassExtensionExportPattern = class extends exports.Pattern {
     }
 };
 
+exports.ClassPropertyPattern = class extends exports.Pattern {
+    constructor() {
+        // this.? =
+        super(
+            [new exports.Token("this"), new exports.Token("."), new exports.Identifier(), new exports.Token("=")],
+            new exports.Token(";")
+        );
+    }
+};
+
 exports.ClassSetterPattern = class extends exports.Pattern {
     constructor() {
         // set ? {
@@ -266,6 +276,7 @@ exports.patterns = [
     new exports.ClassExtensionDeclarationPattern(),
     new exports.ClassExtensionExpressionPattern(),
     new exports.ClassExtensionExportPattern(),
+    new exports.ClassPropertyPattern(),
     new exports.ClassSetterPattern(),
     new exports.ClassGetterPattern(),
     new exports.ClassMethodPattern(),
