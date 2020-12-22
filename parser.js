@@ -8,30 +8,17 @@
 */
 
 var syntax = require("./syntax");
+var references = require("./references");
+
+exports.ParseError = class extends Error {}
 
 exports.Namespace = class {
-    cosntructor(identifier) {
+    constructor(identifier) {
         this.identifier = identifier;
 
         this.fields = [];
     }
 }
-
-exports.Parameter = class {
-    constructor(identifier, type = "*", description = "", defaultValue = "") {
-        this.identifier = identifier;
-        this.type = type;
-        this.description = description;
-        this.defaultValue = defaultValue;
-    }
-};
-
-exports.Return = class {
-    constructor(type = "*", description = "") {
-        this.type = type;
-        this.description = description;
-    }
-};
 
 exports.Reference = class {
     constructor(identifier, synopsis = "") {
@@ -41,7 +28,7 @@ exports.Reference = class {
 };
 
 exports.FunctionReference = class extends exports.Reference {
-    constructor(identifier, synopsis = "", parameters = [], returns = exports.Return("undefined")) {
+    constructor(identifier, synopsis = "", parameters = [], returns = references.Return("undefined")) {
         super(identifier, synopsis);
 
         this.parameters = parameters;
@@ -50,7 +37,7 @@ exports.FunctionReference = class extends exports.Reference {
 };
 
 exports.ClassReference = class extends exports.FunctionReference {
-    constructor(identifier, synopsis = "", parameters = [], returns = exports.Return("undefined")) {
+    constructor(identifier, synopsis = "", parameters = [], returns = references.Return("undefined")) {
         super(identifier, synopsis, parameters, returns);
 
         this.fields = [];
@@ -169,8 +156,38 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
     return foundPatterns;
 };
 
+exports.getReferencesFromPatternApplications = function(patternApplications, referenceCommentIndex = 0) {
+    var references = [];
+    var referenceCued = null;
+
+    for (var i = 0; i < patternApplications.length; i++) {
+        if (patternApplications[i].pattern.constructor instanceof syntax.BlockCommentPattern) {
+            referenceCommentIndex++;
+            referenceCued = true;
+
+            continue;
+        }
+
+        if (referenceCued == null) {
+            continue;
+        }
+
+        // TODO: Add more cases and extract reference info from respective comment
+        switch (patternApplications[i].pattern.constructor) {
+            case syntax.FunctionDeclarationPattern:
+                references.push(new exports.FunctionReference(""));
+        }
+
+        referenceCued = null;
+    }
+
+    return {references, referenceCommentIndex};
+};
+
 exports.parse = function(input) {
     var tokens = exports.tokenise(input);
+
+    exports.getReferencesFromPatternApplications(exports.getPatternApplicationsFromTokens(tokens));
 
     return exports.getPatternApplicationsFromTokens(tokens);
 };
