@@ -115,8 +115,12 @@ exports.parseComment = function(comment) {
             newReferenceData.parameters.push(parseParameter(commentLines[i]));
         } else if (commentLines[i].startsWith("@returns")) {
             newReferenceData.returns = parseReturn(commentLines[i]);
+        } else {
+            newReferenceData.synopsis = " " + commentLines[i];
         }
     }
+
+    newReferenceData.synopsis = newReferenceData.synopsis.replace(/\s\s/g, "\n").trim();
 
     return newReferenceData;
 };

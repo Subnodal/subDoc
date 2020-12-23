@@ -28,7 +28,7 @@ exports.Reference = class {
 };
 
 exports.FunctionReference = class extends exports.Reference {
-    constructor(identifier, synopsis = "", parameters = [], returns = references.Return("undefined")) {
+    constructor(identifier, synopsis = "", parameters = [], returns = new references.Return("undefined")) {
         super(identifier, synopsis);
 
         this.parameters = parameters;
@@ -37,7 +37,7 @@ exports.FunctionReference = class extends exports.Reference {
 };
 
 exports.ClassReference = class extends exports.FunctionReference {
-    constructor(identifier, synopsis = "", parameters = [], returns = references.Return("undefined")) {
+    constructor(identifier, synopsis = "", parameters = [], returns = new references.Return("undefined")) {
         super(identifier, synopsis, parameters, returns);
 
         this.fields = [];
@@ -77,7 +77,7 @@ function shouldCancelAcceptablePatternApplication(patternApplications, patternAp
 }
 
 function shouldAcceptPatternApplication(patternApplications, patternApplicationIndex) {
-    return patternApplications[patternApplicationIndex].shapeIndex == patternApplications[patternApplicationIndex].pattern.shape.length;
+    return patternApplications[patternApplicationIndex].shapeIndex + 1 == patternApplications[patternApplicationIndex].pattern.shape.length;
 }
 
 exports.getPatternApplicationsFromTokens = function(tokens) {
@@ -120,6 +120,8 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
         for (var i = 0; i < patternApplications.length; i++) {
             // Check if pattern application has been successful
             if (shouldAcceptPatternApplication(patternApplications, i)) {
+                patternApplications[i].pattern.fulfilsAt(tokens[tokenIndex], patternApplications[i].shapeIndex); // Call again to ensure that duplicate value prevention has been updated
+
                 // Check if there are competing pattern applications that are more likely to be successful
                 // If so, cancel this pattern application
                 if (shouldCancelAcceptablePatternApplication(patternApplications, i, tokens[tokenIndex + 1])) {
@@ -129,10 +131,6 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
                 patternApplicationNamespaceStack.push(patternApplications[i]);
 
                 patternApplications = []; // Cancel pending pattern applications since a successful one has been found
-
-                if (patternApplicationNamespaceStack.length == 1) {
-                    tokenIndex--;
-                }
 
                 continue;
             }
@@ -157,37 +155,42 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
 };
 
 exports.getReferencesFromPatternApplications = function(patternApplications, referenceCommentIndex = 0) {
-    var references = [];
-    var referenceCued = null;
+    var foundReferences = [];
+    var referenceDataCued = null;
 
     for (var i = 0; i < patternApplications.length; i++) {
-        if (patternApplications[i].pattern.constructor instanceof syntax.BlockCommentPattern) {
+        if (patternApplications[i].pattern instanceof syntax.BlockCommentPattern) {
             referenceCommentIndex++;
-            referenceCued = true;
+            referenceDataCued = references.parseComment(references.getCommentAtIndex(referenceCommentIndex));
 
             continue;
         }
 
-        if (referenceCued == null) {
-            continue;
+        if (referenceDataCued != null) {
+            // TODO: Add more cases and extract reference info from respective comment
+            switch (patternApplications[i].pattern.constructor) {
+                case syntax.FunctionDeclarationPattern:
+                    foundReferences.push(new exports.FunctionReference(patternApplications[i].pattern.shape[1].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns));
+
+                    break;
+            }
         }
 
-        // TODO: Add more cases and extract reference info from respective comment
-        switch (patternApplications[i].pattern.constructor) {
-            case syntax.FunctionDeclarationPattern:
-                references.push(new exports.FunctionReference(""));
-        }
+        var namespacedReferences = exports.getReferencesFromPatternApplications(patternApplications[i].namespacedApplications, referenceCommentIndex);
 
-        referenceCued = null;
+        foundReferences.push(...namespacedReferences.foundReferences);
+
+        referenceCommentIndex = namespacedReferences.referenceCommentIndex;
+        referenceDataCued = null;
     }
 
-    return {references, referenceCommentIndex};
+    return {foundReferences, referenceCommentIndex};
 };
 
 exports.parse = function(input) {
     var tokens = exports.tokenise(input);
 
-    exports.getReferencesFromPatternApplications(exports.getPatternApplicationsFromTokens(tokens));
+    console.log(exports.getReferencesFromPatternApplications(exports.getPatternApplicationsFromTokens(tokens)));
 
     return exports.getPatternApplicationsFromTokens(tokens);
 };
