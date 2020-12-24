@@ -110,8 +110,8 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
                 continue;
             }
 
-            if (syntax.patterns[i].fulfilsAt(tokens[tokenIndex], 0)) {
-                patternApplications.push(new syntax.PatternApplication(syntax.patterns[i]));
+            if (new syntax.patterns[i]().fulfilsAt(tokens[tokenIndex], 0)) {
+                patternApplications.push(new syntax.PatternApplication(new syntax.patterns[i]()));
             }
         }
 
@@ -154,14 +154,14 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
     return foundPatterns;
 };
 
-exports.getReferencesFromPatternApplications = function(patternApplications, referenceCommentIndex = 0) {
+exports.getReferencesFromPatternApplications = function(patternApplications, input, referenceCommentIndex = 0) {
     var foundReferences = [];
     var referenceDataCued = null;
 
     for (var i = 0; i < patternApplications.length; i++) {
         if (patternApplications[i].pattern instanceof syntax.BlockCommentPattern) {
             referenceCommentIndex++;
-            referenceDataCued = references.parseComment(references.getCommentAtIndex(referenceCommentIndex));
+            referenceDataCued = references.parseComment(references.getCommentAtIndex(input, referenceCommentIndex));
 
             continue;
         }
@@ -176,7 +176,7 @@ exports.getReferencesFromPatternApplications = function(patternApplications, ref
             }
         }
 
-        var namespacedReferences = exports.getReferencesFromPatternApplications(patternApplications[i].namespacedApplications, referenceCommentIndex);
+        var namespacedReferences = exports.getReferencesFromPatternApplications(patternApplications[i].namespacedApplications, input, referenceCommentIndex);
 
         foundReferences.push(...namespacedReferences.foundReferences);
 
@@ -190,7 +190,7 @@ exports.getReferencesFromPatternApplications = function(patternApplications, ref
 exports.parse = function(input) {
     var tokens = exports.tokenise(input);
 
-    console.log(exports.getReferencesFromPatternApplications(exports.getPatternApplicationsFromTokens(tokens)));
+    console.log(exports.getReferencesFromPatternApplications(exports.getPatternApplicationsFromTokens(tokens), input));
 
     return exports.getPatternApplicationsFromTokens(tokens);
 };

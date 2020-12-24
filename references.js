@@ -95,17 +95,14 @@ function parseReturn(comment) {
     return newReturn;
 }
 
-exports.getCommentAtIndex = function(index) {
-    // TODO: Get block comment instance from its index
-    return "dummy";
+exports.getCommentAtIndex = function(input, index) {
+    return [...input.matchAll(/\/\*(.*?)\*\//sg)][index - 1][1];
 };
 
 exports.parseComment = function(comment) {
     var commentLines = comment.split("\n").filter((item) => item.trim() != "");
     var indentCount = Math.max(commentLines[0].search(/[\S\t]/), 0);
     var newReferenceData = new exports.ReferenceData();
-
-    console.log(indentCount);
 
     // For lines that start with an indent, remove that first indent
     commentLines = commentLines.map((item) => new RegExp(`[\\s\\t]{${indentCount},}`).test(item) ? item.slice(indentCount) : item);
