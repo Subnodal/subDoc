@@ -53,6 +53,18 @@ console.log(tree.walk(config.data.indir));
 
 console.log(parser.parse(`
     /*
+        comment
+    */
+    class Test {
+        constructor() {}
+
+        /*
+            does stuff
+        */
+        another() {}
+    }
+
+    /*
         Literally returns true no matter what.
         @param a {*} A random value
         @param b {Number = 5} Just a number
@@ -61,6 +73,18 @@ console.log(parser.parse(`
     */
     function testing(a, b = 5, c) {
         return true;
+    }
+
+    /*
+        Hello
+    */
+    namespace("test", function(exports) {
+        /*
+            hi there
+        */
+        exports.hello = function() {
+            hi;
+        };
     }
 
     /*

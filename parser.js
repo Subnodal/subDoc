@@ -12,20 +12,20 @@ var references = require("./references");
 
 exports.ParseError = class extends Error {}
 
-exports.Namespace = class {
-    constructor(identifier) {
-        this.identifier = identifier;
-
-        this.fields = [];
-    }
-}
-
 exports.Reference = class {
     constructor(identifier, synopsis = "") {
         this.identifier = identifier;
         this.synopsis = synopsis;
     }
 };
+
+exports.NamespaceReference = class extends exports.Reference {
+    constructor(identifier, synopsis = "") {
+        super(identifier, synopsis);
+
+        this.fields = [];
+    }
+}
 
 exports.FunctionReference = class extends exports.Reference {
     constructor(identifier, synopsis = "", parameters = [], returns = new references.Return("undefined")) {
@@ -37,10 +37,30 @@ exports.FunctionReference = class extends exports.Reference {
 };
 
 exports.ClassReference = class extends exports.FunctionReference {
-    constructor(identifier, synopsis = "", parameters = [], returns = new references.Return("undefined")) {
+    constructor(identifier, synopsis = "", parameters = [], returns = new references.Return("undefined"), extendsIdentifier = "") {
         super(identifier, synopsis, parameters, returns);
 
+        this.extendsIdentifier = extendsIdentifier;
+
         this.fields = [];
+    }
+};
+
+exports.PropertyReference = class extends exports.Reference {};
+
+exports.PropertyAccessReference = class extends exports.PropertyReference {
+    constructor(identifier, synopsis = "", method = "set") {
+        super(identifier, synopsis);
+
+        this.method = method;
+    }
+};
+
+exports.VariableReference = class extends exports.Reference {
+    constructor(identifier, synopsis = "", readOnly = false) {
+        super(identifier, synopsis);
+
+        this.readOnly = readOnly;
     }
 };
 
@@ -167,20 +187,114 @@ exports.getReferencesFromPatternApplications = function(patternApplications, inp
         }
 
         if (referenceDataCued != null) {
-            // TODO: Add more cases and extract reference info from respective comment
             switch (patternApplications[i].pattern.constructor) {
+                case syntax.NamespacePattern:
+                    foundReferences.push(new exports.NamespaceReference(patternApplications[i].pattern.shape[3].value, referenceCommentIndex.synopsis));
+
+                    break;
                 case syntax.FunctionDeclarationPattern:
                     foundReferences.push(new exports.FunctionReference(patternApplications[i].pattern.shape[1].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns));
 
                     break;
+
+                case syntax.FunctionExportPattern:
+                    foundReferences.push(new exports.FunctionReference(patternApplications[i].pattern.shape[2].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns));
+
+                    break;
+
+                case syntax.FunctionExpressionPattern:
+                    foundReferences.push(new exports.FunctionReference(patternApplications[i].pattern.shape[0].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns));
+
+                    break;
+
+                case syntax.ClassDeclarationPattern:
+                    foundReferences.push(new exports.ClassReference(patternApplications[i].pattern.shape[1].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns));
+
+                    break;
+
+                case syntax.ClassExportPattern:
+                    foundReferences.push(new exports.ClassExportPattern(patternApplications[i].pattern.shape[2].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns));
+
+                    break;
+
+                case syntax.ClassExpressionPattern:
+                    foundReferences.push(new exports.ClassReference(patternApplications[i].pattern.shape[0].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns));
+
+                    break;
+                
+                case syntax.ClassExtensionDeclarationPattern:
+                    foundReferences.push(new exports.ClassReference(patternApplications[i].pattern.shape[1].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns, patternApplications[i].pattern.shape[3].value));
+
+                    break;
+
+                case syntax.ClassExtensionExportPattern:
+                    foundReferences.push(new exports.ClassExportPattern(patternApplications[i].pattern.shape[2].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns, patternApplications[i].pattern.shape[6].value));
+
+                    break;
+
+                case syntax.ClassExtensionExpressionPattern:
+                    foundReferences.push(new exports.ClassReference(patternApplications[i].pattern.shape[0].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns, patternApplications[i].pattern.shape[4].value));
+
+                    break;
+
+                case syntax.ClassPropertyPattern:
+                    foundReferences.push(new exports.PropertyReference(patternApplications[i].pattern.shape[2].value, referenceDataCued.synopsis));
+                    
+                    break;
+
+                case syntax.ClassSetterPattern:
+                    foundReferences.push(new exports.PropertyAccessReference(patternApplications[i].pattern.shape[1].value, referenceDataCued.synopsis, "set"));
+
+                    break;
+
+                case syntax.ClassGetterPattern:
+                    foundReferences.push(new exports.PropertyAccessReference(patternApplications[i].pattern.shape[1].value, referenceDataCued.synopsis, "get"));
+
+                    break;
+
+                case syntax.ClassMethodPattern:
+                    foundReferences.push(new exports.FunctionReference(patternApplications[i].pattern.shape[0].value, referenceDataCued.synopsis, referenceDataCued.parameters, referenceDataCued.returns));
+
+                    break;
+
+                case syntax.ConstantPattern:
+                    foundReferences.push(new exports.VariableReference(patternApplications[i].pattern.shape[1].value, referenceDataCued.synopsis, true));
+
+                    break;
+
+                case syntax.VariablePattern:
+                    foundReferences.push(new exports.VariableReference(patternApplications[i].pattern.shape[1].value, referenceDataCued.synopsis, false));
+
+                    break;
+
+                case syntax.ExportPattern:
+                    foundReferences.push(new exports.VariableReference(patternApplications[i].pattern.shape[2].value, referenceDataCued.synopsis, false));
+
+                    break;
+
+                case syntax.BlockScope:
+                    var namespacedReferences = exports.getReferencesFromPatternApplications(patternApplications[i].namespacedApplications, input, referenceCommentIndex);
+
+                    foundReferences = foundReferences.concat(namespacedReferences.foundReferences);
+                    referenceCommentIndex = namespacedReferences.referenceCommentIndex;
+            }
+
+            if ([
+                syntax.NamespacePattern,
+                syntax.ClassDeclarationPattern,
+                syntax.ClassExpressionPattern,
+                syntax.ClassExportPattern,
+                syntax.ClassExtensionDeclarationPattern,
+                syntax.ClassExtensionExpressionPattern,
+                syntax.ClassExtensionExportPattern
+            ].includes(patternApplications[i].pattern.constructor)) {
+                var namespacedReferences = exports.getReferencesFromPatternApplications(patternApplications[i].namespacedApplications, input, referenceCommentIndex);
+
+                foundReferences[foundReferences.length - 1].fields = namespacedReferences.foundReferences;
+                referenceCommentIndex = namespacedReferences.referenceCommentIndex;
             }
         }
 
-        var namespacedReferences = exports.getReferencesFromPatternApplications(patternApplications[i].namespacedApplications, input, referenceCommentIndex);
-
-        foundReferences.push(...namespacedReferences.foundReferences);
-
-        referenceCommentIndex = namespacedReferences.referenceCommentIndex;
         referenceDataCued = null;
     }
 

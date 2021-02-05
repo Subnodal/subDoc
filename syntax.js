@@ -84,10 +84,10 @@ exports.BlockCommentPattern = class extends exports.Pattern {
 exports.NamespacePattern = class extends exports.Pattern {
     constructor() {
         // namespace("??", function(??) {
-            super(
-                [new exports.Token("namespace"), new exports.Token("("), new exports.Token("\""), new exports.TokensUntil("\""), new exports.Token(","), new exports.Token("function"), new exports.Token("("), new exports.TokensUntil(")"), new exports.Token("{")],
-                new exports.Token("}")
-            );
+        super(
+            [new exports.Token("namespace"), new exports.Token("("), new exports.Token("\""), new exports.TokensUntil("\""), new exports.Token(","), new exports.Token("function"), new exports.Token("("), new exports.TokensUntil(")"), new exports.Token("{")],
+            new exports.Token("}")
+        );
     }
 };
 
@@ -96,16 +96,6 @@ exports.FunctionDeclarationPattern = class extends exports.Pattern {
         // function ? (??) {
         super(
             [new exports.Token("function"), new exports.Identifier(), new exports.Token("("), new exports.TokensUntil(")"), new exports.Token("{")],
-            new exports.Token("}")
-        );
-    }
-};
-
-exports.FunctionExpressionPattern = class extends exports.Pattern {
-    constructor() {
-        // ? = function(??) {
-        super(
-            [new exports.Identifier(), new exports.Token("="), new exports.Token("function"), new exports.Token("("), new exports.TokensUntil(")"), new exports.Token("{")],
             new exports.Token("}")
         );
     }
@@ -121,21 +111,21 @@ exports.FunctionExportPattern = class extends exports.Pattern {
     }
 };
 
-exports.ClassDeclarationPattern = class extends exports.Pattern {
+exports.FunctionExpressionPattern = class extends exports.Pattern {
     constructor() {
-        // class ? {
+        // ? = function(??) {
         super(
-            [new exports.Token("class"), new exports.Identifier(), new exports.Token("{")],
+            [new exports.Identifier(), new exports.Token("="), new exports.Token("function"), new exports.Token("("), new exports.TokensUntil(")"), new exports.Token("{")],
             new exports.Token("}")
         );
     }
 };
 
-exports.ClassExpressionPattern = class extends exports.Pattern {
+exports.ClassDeclarationPattern = class extends exports.Pattern {
     constructor() {
         // class ? {
         super(
-            [new exports.Identifier(), new exports.Token("="), new exports.Token("class"), new exports.Token("{")],
+            [new exports.Token("class"), new exports.Identifier(), new exports.Token("{")],
             new exports.Token("}")
         );
     }
@@ -151,6 +141,16 @@ exports.ClassExportPattern = class extends exports.Pattern {
     }
 };
 
+exports.ClassExpressionPattern = class extends exports.Pattern {
+    constructor() {
+        // class ? {
+        super(
+            [new exports.Identifier(), new exports.Token("="), new exports.Token("class"), new exports.Token("{")],
+            new exports.Token("}")
+        );
+    }
+};
+
 exports.ClassExtensionDeclarationPattern = class extends exports.Pattern {
     constructor() {
         // class ? {
@@ -161,21 +161,21 @@ exports.ClassExtensionDeclarationPattern = class extends exports.Pattern {
     }
 };
 
-exports.ClassExtensionExpressionPattern = class extends exports.Pattern {
-    constructor() {
-        // class ? {
-        super(
-            [new exports.Identifier(), new exports.Token("="), new exports.Token("class"), new exports.Token("extends"), new exports.Identifier(), new exports.Token("{")],
-            new exports.Token("}")
-        );
-    }
-};
-
 exports.ClassExtensionExportPattern = class extends exports.Pattern {
     constructor() {
         // class ? {
         super(
             [new exports.Token("exports"), new exports.Token("."), new exports.Identifier(), new exports.Token("="), new exports.Token("class"), new exports.Token("extends"), new exports.Identifier(), new exports.Token("{")],
+            new exports.Token("}")
+        );
+    }
+};
+
+exports.ClassExtensionExpressionPattern = class extends exports.Pattern {
+    constructor() {
+        // class ? {
+        super(
+            [new exports.Identifier(), new exports.Token("="), new exports.Token("class"), new exports.Token("extends"), new exports.Identifier(), new exports.Token("{")],
             new exports.Token("}")
         );
     }
@@ -286,14 +286,14 @@ exports.patterns = [
     exports.BlockCommentPattern,
     exports.NamespacePattern,
     exports.FunctionDeclarationPattern,
-    exports.FunctionExpressionPattern,
     exports.FunctionExportPattern,
+    exports.FunctionExpressionPattern,
     exports.ClassDeclarationPattern,
-    exports.ClassExpressionPattern,
     exports.ClassExportPattern,
+    exports.ClassExpressionPattern,
     exports.ClassExtensionDeclarationPattern,
-    exports.ClassExtensionExpressionPattern,
     exports.ClassExtensionExportPattern,
+    exports.ClassExtensionExpressionPattern,
     exports.ClassPropertyPattern,
     exports.ClassSetterPattern,
     exports.ClassGetterPattern,
