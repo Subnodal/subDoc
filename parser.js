@@ -65,7 +65,7 @@ exports.VariableReference = class extends exports.Reference {
 };
 
 exports.tokenise = function(input) {
-    var tokens = input.split(/\b|\s|(?=(?!\())(?!(?!\)))|(?=(?!{))(?!(?!}))|(?=["'`:;,])/g); // Split at identifier boundaries, whitespace, brackets, quotes and delimiters
+    var tokens = input.split(/\b|\s|(?=(?!\())(?!(?!\)))|(?=(?!{))(?!(?!}))|(?=["'`:;,])|(?=\()|(?<=\))/g); // Split at identifier boundaries, whitespace, brackets, quotes and delimiters
 
     // Remove whitespace tokens and trim the rest of the tokens
     tokens = tokens
@@ -114,6 +114,8 @@ exports.getPatternApplicationsFromTokens = function(tokens) {
             tokens[tokenIndex] == null
         )) {
             var poppedPatternApplication = patternApplicationNamespaceStack.pop();
+
+            console.log(poppedPatternApplication);
 
             if (patternApplicationNamespaceStack.length == 0) {
                 foundPatterns.push(poppedPatternApplication);
@@ -304,7 +306,7 @@ exports.getReferencesFromPatternApplications = function(patternApplications, inp
 exports.parse = function(input) {
     var tokens = exports.tokenise(input);
 
-    console.log(exports.getReferencesFromPatternApplications(exports.getPatternApplicationsFromTokens(tokens), input));
+    console.log(tokens);
 
-    return exports.getPatternApplicationsFromTokens(tokens);
+    return exports.getReferencesFromPatternApplications(exports.getPatternApplicationsFromTokens(tokens), input);
 };

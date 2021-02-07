@@ -1,16 +1,4 @@
 /*
-    subDoc
-
-    Copyright (C) Subnodal Technologies. All Rights Reserved.
-
-    https://subnodal.com
-    Licenced by the Subnodal Open-Source Licence, which can be found at LICENCE.md.
-*/
-
-const fs = require("fs");
-const path = require("path");
-
-/*
     Get a list of paths to files in a directory.
     @param dir {String} Root path of directory to traverse
     @returns {Object} List of traversed file paths
@@ -20,10 +8,10 @@ exports.walk = function(dir, treeResults = []) {
 
     dirResults.forEach(function(result) {
         try {
-            if (fs.statSync(path.join(dir, result)).isDirectory()) {
-                treeResults = exports.walk(path.join(dir, result), treeResults);
+            if (fs.statSync(path.join).isDirectory) {
+                treeResults = exports.walk(path.join, treeResults);
             } else {
-                treeResults.push(path.join(dir, result));
+                treeResults.push
             }
         } catch (e) {}
     });

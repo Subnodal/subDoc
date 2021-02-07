@@ -94,4 +94,6 @@ console.log(parser.parse(`
         return true;
     }
 `));
+
+console.log(parser.parse(tree.squash(tree.walk(config.data.indir))));
 debugger;

@@ -7,6 +7,11 @@
     Licenced by the Subnodal Open-Source Licence, which can be found at LICENCE.md.
 */
 
+const RESERVED_KEYWORDS = [
+    "function", "var", "const", "let", "class", "async", "await",
+    "if", "else", "for", "in", "do", "while", "try", "catch", "finally", "break", "continue", "return", "with", "throw", "yield", "new", "typeof", "instanceof", "delete", "import", "export"
+];
+
 exports.Identifier = class {
     constructor(value = null) {
         this.value = value;
@@ -20,9 +25,10 @@ exports.Token = class {
 };
 
 exports.TokensUntil = class {
-    constructor(token, value = []) {
+    constructor(token, value = [], excludeTokens = []) {
         this.token = token;
         this.value = value;
+        this.excludeTokens = excludeTokens;
     }
 };
 
@@ -43,7 +49,7 @@ exports.Pattern = class {
             return false;
         }
 
-        if (this.shape[index] instanceof exports.Identifier) {
+        if (this.shape[index] instanceof exports.Identifier && !(RESERVED_KEYWORDS.includes(token))) {
             if (!this.hasFinishedFillingValues) {
                 this.shape[index].value = token;
             }
@@ -55,7 +61,7 @@ exports.Pattern = class {
             return true;
         }
 
-        if (this.shape[index] instanceof exports.TokensUntil) {
+        if (this.shape[index] instanceof exports.TokensUntil && !(this.shape[index].excludeTokens.includes(token))) {
             if (!this.hasFinishedFillingValues && this.shape[index].token != token) {
                 this.shape[index].value.push(token);
             }
@@ -215,7 +221,7 @@ exports.ClassMethodPattern = class extends exports.Pattern {
     constructor() {
         // ? {
         super(
-            [new exports.Identifier(), new exports.Token("("), new exports.TokensUntil(")"), new exports.Token("{")],
+            [new exports.Identifier(), new exports.Token("("), new exports.TokensUntil(")", [], ["("]), new exports.Token("{")],
             new exports.Token("}")
         );
     }
