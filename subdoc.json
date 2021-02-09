@@ -1,0 +1,6 @@
+{
+    "excludePaths": [
+        "node_modules/",
+        ".git/"
+    ]
+}

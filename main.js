@@ -44,56 +44,7 @@ config.init();
 
 config.data.indir = options.indir || config.data.indir || ".";
 config.data.outdir = options.outdir || config.data.outdir || path.join(config.data.indir, "docs");
+config.data.excludePaths = config.data.excludePaths || [];
 
-console.log(tree.walk(config.data.indir));
-// console.log(parser.parse("function integerTest(a, b, c) {constructor(a) {test() {e}}} function integerTest(a, b, c) {} function integerTest(a, b, c) {}"));
-// console.log(parser.parse(`exports.test = function(a) {exports.test = "hi";});`));
-// console.log(parser.parse(`namespace("com.subnodal.subdoc", function(exports) {a /* test */ function integerTest(a, b, c) {a}});`));
-// console.log(parser.parse(`/* test */ function integerTest(a, b, c) {a}`));
-
-console.log(parser.parse(`
-    /*
-        comment
-    */
-    class Test {
-        constructor() {}
-
-        /*
-            does stuff
-        */
-        another() {}
-    }
-
-    /*
-        Literally returns true no matter what.
-        @param a {*} A random value
-        @param b {Number = 5} Just a number
-        @param c {String | null} Some bit of text or something
-        @returns {Boolean} Whether the function is good or not
-    */
-    function testing(a, b = 5, c) {
-        return true;
-    }
-
-    /*
-        Hello
-    */
-    namespace("test", function(exports) {
-        /*
-            hi there
-        */
-        exports.hello = function() {
-            hi;
-        };
-    }
-
-    /*
-       Just another block.
-    */
-    function somethingElse() {
-        return true;
-    }
-`));
-
-console.log(parser.parse(tree.squash(tree.walk(config.data.indir))));
+console.log(parser.parse(tree.squash(tree.walk(config.data.indir, config.data.excludePaths))));
 debugger;

@@ -11,17 +11,30 @@ const fs = require("fs");
 const path = require("path");
 
 /*
+    @name tree.walk
     Get a list of paths to files in a directory.
     @param dir {String} Root path of directory to traverse
     @returns {Object} List of traversed file paths
 */
-exports.walk = function(dir, treeResults = []) {
+exports.walk = function(dir, excludePaths = [], treeResults = []) {
     var dirResults = fs.readdirSync(dir);
 
     dirResults.forEach(function(result) {
+        var shouldSkip = false;
+
+        excludePaths.forEach(function(exclusion) {
+            if (path.join(dir, result).startsWith(exclusion)) {
+                shouldSkip = true;
+            }
+        });
+
+        if (shouldSkip) {
+            return;
+        }
+
         try {
             if (fs.statSync(path.join(dir, result)).isDirectory()) {
-                treeResults = exports.walk(path.join(dir, result), treeResults);
+                treeResults = exports.walk(path.join(dir, result), excludePaths, treeResults);
             } else {
                 treeResults.push(path.join(dir, result));
             }
@@ -32,6 +45,7 @@ exports.walk = function(dir, treeResults = []) {
 };
 
 /*
+    @name tree.squash
     Get all contents of specified JavaScript files.
     @param files {Object} List of files to extract contents of (may include non-JS files)
     @returns {String} Concatenated contents of all JavaScript files
@@ -41,7 +55,7 @@ exports.squash = function(files) {
 
     files.forEach(function(file) {
         try {
-            if (file == "test.js") {
+            if (file.endsWith(".js")) {
                 data += fs.readFileSync(file) + "\n";
             }
         } catch (e) {}

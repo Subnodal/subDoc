@@ -11,8 +11,10 @@ const RE_TYPE_BRACKETS = /<([^>]*)>/;
 
 var parser = require("./parser");
 
-exports.ReferenceData = class {
+exports.Reference = class {
     constructor() {
+        this.name = null;
+        this.type = "function";
         this.synopsis = "";
         this.parameters = [];
         this.returns = new exports.Return("undefined");
@@ -95,20 +97,20 @@ function parseReturn(comment) {
     return newReturn;
 }
 
-exports.getCommentAtIndex = function(input, index) {
-    return [...input.matchAll(/\/\*(.*?)\*\//sg)][index - 1][1];
-};
-
 exports.parseComment = function(comment) {
     var commentLines = comment.split("\n").filter((item) => item.trim() != "");
     var indentCount = Math.max(commentLines[0].search(/[\S\t]/), 0);
-    var newReferenceData = new exports.ReferenceData();
+    var newReferenceData = new exports.Reference();
 
     // For lines that start with an indent, remove that first indent
     commentLines = commentLines.map((item) => new RegExp(`[\\s\\t]{${indentCount},}`).test(item) ? item.slice(indentCount) : item);
 
     for (var i = 0; i < commentLines.length; i++) {
-        if (commentLines[i].startsWith("@param")) {
+        if (commentLines[i].startsWith("@name")) {
+            newReferenceData.name = commentLines[i].split(" ").slice(1).join(" ");
+        } else if (commentLines[i].startsWith("@type")) {
+            newReferenceData.type = commentLines[i].split(" ").slice(1).join(" ");
+        } else if (commentLines[i].startsWith("@param")) {
             newReferenceData.parameters.push(parseParameter(commentLines[i]));
         } else if (commentLines[i].startsWith("@returns")) {
             newReferenceData.returns = parseReturn(commentLines[i]);
