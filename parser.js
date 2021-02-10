@@ -39,8 +39,8 @@ exports.Namespace = class {
 /*
     @name parser.parse
     Parse all supplied code and return namespaces containing references.
-    @param input {String} Input code to parse
-    @returns {Object} List containing `parser.Namespace` instances
+    @param input <String> Input code to parse
+    @returns <[parser.Namespace]> List containing `parser.Namespace` instances
 */
 exports.parse = function(input) {
     var regex = new RegExp(RE_NAMESPACE, "gs");

@@ -15,6 +15,7 @@ const path = require("path");
 var config = require("./config");
 var tree = require("./tree");
 var parser = require("./parser");
+var generator = require("./generator");
 
 const options = yargs
     .usage("Usage: $0 [-i indir] [-o outdir] [-c configfile]")
@@ -47,4 +48,7 @@ config.data.outdir = options.outdir || config.data.outdir || path.join(config.da
 config.data.excludePaths = config.data.excludePaths || [];
 
 console.log(parser.parse(tree.squash(tree.walk(config.data.indir, config.data.excludePaths))));
+console.log(generator.generateMarkdown(
+    parser.parse(tree.squash(tree.walk(config.data.indir, config.data.excludePaths)))[0]
+    ));
 debugger;

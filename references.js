@@ -11,6 +11,53 @@ const RE_TYPE_BRACKETS = /<([^>]*)>/;
 
 var parser = require("./parser");
 
+/*
+    @name references.Reference
+    @type class
+    Reference object containing documentable information about a code entity.
+*/
+/*
+    @name references.Reference.name
+    @type prop <null | String>
+    Identifier or reference chain of code entity
+*/
+/*
+    @name references.Reference.type
+    @type prop <String>
+    The type of code entity that is being referenced.
+        ~~~~
+        First word (item delimited by space) be any of:
+        * `"function"` for a function (defined by `function` keyword)
+        * `"class"` for a class (defined by `class` keyword), `"extends"` can be
+          concatenated after a space to represent a class extension
+        * `"method"` for a class method
+        * `"static"` for a static class method (defined by `static` keyword)
+        * `"prop"` for a class property (typically referenced as
+          `this.propName`)
+        * `"const"` for a constant variable (defined by `const` keyword)
+        * `"var"` for a variable (typically defined by `var` keyword)
+        * `"generator"` for a generator function (defined by `function*` syntax)
+        ~~~~
+        May also be anything else, but this is discouraged. If the type is a
+        `"prop"`, `"const"` or `"var"`, the type's datatype annotation can also
+        be concatenated after a space.
+*/
+/*
+    @name references.Reference.synopsis
+    @type prop <String>
+    The synopsis describing code entity.
+        Leave this blank if there is no synopsis.
+*/
+/*
+    @name references.Reference.parameters
+    @type prop <[references.Parameter]>
+    A list of parameter references that code entity takes, if any.
+*/
+/*
+    @name references.Reference.returns
+    @type class <references.Return>
+    A return object that code entity gives, if any.
+*/
 exports.Reference = class {
     constructor() {
         this.name = null;
@@ -21,6 +68,31 @@ exports.Reference = class {
     }
 };
 
+/*
+    @name references.Parameter
+    @type class
+    A reference to a parameter that is part of a code entity.
+    @param identifier <String> The identifier of the parameter
+    @param type <String = "*"> The datatype that a value should be of when used as an argument for this parameter
+    @param description <String = ""> A description of the parameter. Leave blank if there's no description
+    @param defaultValue <String = "undefined"> The default value the parameter will be if there is no matching argument specified
+*/
+/*
+    @name references.Parameter.identifier
+    @type prop <String>
+*/
+/*
+    @name references.Parameter.type
+    @type prop <String>
+*/
+/*
+    @name references.Parameter.description
+    @type prop <String>
+*/
+/*
+    @name references.Parameter.defaultValue
+    @type prop <String>
+*/
 exports.Parameter = class {
     constructor(identifier, type = "*", description = "", defaultValue = "undefined") {
         this.identifier = identifier;
@@ -30,8 +102,23 @@ exports.Parameter = class {
     }
 };
 
+/*
+    @name references.Return
+    @type class
+    A reference to a value that a code entity returns.
+    @param type <String = "undefined"> The datatype of the value that is returned
+    @param description <String = ""> A description of the return. Leave blank if there's no description
+*/
+/*
+    @name references.Return.type
+    @type prop <String>
+*/
+/*
+    @name references.Return.description
+    @type prop <String>
+*/
 exports.Return = class {
-    constructor(type = "*", description = "") {
+    constructor(type = "undefined", description = "") {
         this.type = type;
         this.description = description;
     }
@@ -97,6 +184,12 @@ function parseReturn(comment) {
     return newReturn;
 }
 
+/*
+    @name references.parseComment
+    Parse a comment's type annotations to generate a code reference.
+    @param comment <String> Contents of comment to parse, excluding opening and closing comment syntax
+    @returns <references.Reference> The generated code reference instance
+*/
 exports.parseComment = function(comment) {
     var commentLines = comment.split("\n").filter((item) => item.trim() != "");
     var indentCount = Math.max(commentLines[0].search(/[\S\t]/), 0);
@@ -115,11 +208,11 @@ exports.parseComment = function(comment) {
         } else if (commentLines[i].startsWith("@returns")) {
             newReferenceData.returns = parseReturn(commentLines[i]);
         } else {
-            newReferenceData.synopsis = " " + commentLines[i];
+            newReferenceData.synopsis += " " + commentLines[i];
         }
     }
 
-    newReferenceData.synopsis = newReferenceData.synopsis.replace(/\s\s/g, "\n").trim();
+    newReferenceData.synopsis = newReferenceData.synopsis.replace(new RegExp(" ".repeat(5), "g"), "\n").replace(/~~~~/g, "\n").trim();
 
     return newReferenceData;
 };
