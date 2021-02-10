@@ -1,4 +1,5 @@
 {
+    "outdir": "docs/en/reference",
     "excludePaths": [
         "node_modules/",
         ".git/"

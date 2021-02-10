@@ -23,7 +23,7 @@ exports.walk = function(dir, excludePaths = [], treeResults = []) {
         var shouldSkip = false;
 
         excludePaths.forEach(function(exclusion) {
-            if (path.join(dir, result).startsWith(exclusion)) {
+            if (path.join(dir, result).startsWith(path.join(...exclusion.split(/\/|\\/g)))) {
                 shouldSkip = true;
             }
         });
@@ -42,6 +42,17 @@ exports.walk = function(dir, excludePaths = [], treeResults = []) {
     });
 
     return treeResults;
+};
+
+/*
+    @name tree.clean
+    Delete directory and its contents if it doesn't exist.
+    @param dir <String> Directory to delete
+*/
+exports.clean = function(dir) {
+    if (fs.existsSync(dir)) {
+        fs.rmdirSync(dir, {recursive: true});
+    }
 };
 
 /*

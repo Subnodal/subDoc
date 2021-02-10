@@ -7,6 +7,9 @@
     Licenced by the Subnodal Open-Source Licence, which can be found at LICENCE.md.
 */
 
+var fs = require("fs");
+var path = require("path");
+
 const UNICODE_VARSEL_EMOJI = "\uFE0F"
 
 const REFERENCE_SYMBOLS = {
@@ -87,5 +90,29 @@ exports.generateMarkdown = function(namespace) {
         markdown += `\n`;
     });
 
+    markdown = markdown.replace(/\n+$/gs, "");
+
     return markdown;
+};
+
+/*
+    @name generator.createMarkdownFiles
+    Create Markdown files in the specified directory with given namespaces.
+    @param outdir <String> Directory to create files in
+    @param namespaces <[parser.Namespace]> Namespaces to generate Markdown files with
+*/
+exports.createMarkdownFiles = function(outdir, namespaces) {
+    namespaces.forEach(function(namespace) {
+        var filename = namespace.name.trim() + ".md";
+
+        if (namespace.name.trim() == "") {
+            filename = "global.md";
+        }
+
+        if (!fs.existsSync(outdir)) {
+            fs.mkdirSync(outdir, {recursive: true});
+        }
+
+        fs.writeFileSync(path.join(outdir, filename), exports.generateMarkdown(namespace));
+    });
 };

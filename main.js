@@ -47,8 +47,9 @@ config.data.indir = options.indir || config.data.indir || ".";
 config.data.outdir = options.outdir || config.data.outdir || path.join(config.data.indir, "docs");
 config.data.excludePaths = config.data.excludePaths || [];
 
-console.log(parser.parse(tree.squash(tree.walk(config.data.indir, config.data.excludePaths))));
-console.log(generator.generateMarkdown(
-    parser.parse(tree.squash(tree.walk(config.data.indir, config.data.excludePaths)))[0]
-    ));
-debugger;
+tree.clean(config.data.outdir);
+
+var code = tree.squash(tree.walk(config.data.indir, [...config.data.excludePaths, config.data.outdir]));
+var namespaces = parser.parse(code);
+
+generator.createMarkdownFiles(config.data.outdir, namespaces);
