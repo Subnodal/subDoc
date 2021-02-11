@@ -109,6 +109,10 @@ exports.createMarkdownFiles = function(outdir, namespaces) {
             filename = "global.md";
         }
 
+        if (namespace.references.length == 0) {
+            return; // Skip this namespace since it's empty
+        }
+
         if (!fs.existsSync(outdir)) {
             fs.mkdirSync(outdir, {recursive: true});
         }

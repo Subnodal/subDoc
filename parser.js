@@ -9,7 +9,7 @@
 
 var references = require("./references");
 
-const RE_NAMESPACE = /namespace\("(.*?)",\s*function\s*\(.*?\)\s*{(.*?)}\)/;
+const RE_NAMESPACE = /\/\/[ \t\f\v]*@namespace[ \t\f\v]*(.*?)\n(.*?)\/\/[ \t\f\v]*@endnamespace[^\n]*/;
 const RE_COMMENT = /\/\*(.*?)\*\//;
 
 exports.ParseError = class extends Error {}
@@ -51,7 +51,7 @@ exports.parse = function(input) {
         namespaces.push(new exports.Namespace(result[1], result[2]));
     }
 
-    input = input.replace(new RegExp(RE_NAMESPACE, "gs"), input);
+    input = input.replace(new RegExp(RE_NAMESPACE, "gs"), "");
 
     namespaces.push(new exports.Namespace("", input));
 
