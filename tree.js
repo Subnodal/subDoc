@@ -51,7 +51,7 @@ exports.walk = function(dir, excludePaths = [], treeResults = []) {
 */
 exports.clean = function(dir) {
     if (fs.existsSync(dir)) {
-        fs.rmdirSync(dir, {recursive: true});
+        fs.rmSync(dir, {recursive: true});
     }
 };
 
